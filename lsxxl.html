@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>历史课堂消消乐</title>
+    <style>
+        /* 原有样式保持不变 */
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            background: #f0f8ff;
+            margin: 0;
+            padding: 20px;
+        }
+
+        h1 {
+            color: #2c3e50;
+            margin-bottom: 40px;
+        }
+
+        #gameArea {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            justify-content: center;
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        .bubble {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 10px;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+            transform: translateZ(0);
+            color: white;
+            font-weight: bold;
+            text-align: center;
+        }
+
+        .bubble:hover {
+            transform: scale(1.1) translateZ(10px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.3);
+        }
+
+        .selected {
+            transform: scale(1.2) translateZ(20px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.4);
+        }
+
+        #successMessage {
+            display: none;
+            color: #27ae60;
+            font-size: 2em;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <h1>历史课堂消消乐</h1>
+    <div id="successMessage">恭喜你挑战成功！</div>
+    <div id="gameArea"></div>
+
+    <script>
+        const pairs = {
+            '老子': '无为而治',
+            '孔子': '为政以德',
+            '墨子': '兼爱非攻尚贤节俭',
+            '韩非子': '以法治国',
+            '孟子': '仁政', 
+            '荀子': '礼治',
+            '庄子': '追求精神自由'
+        };
+
+        const colors = ['#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FFEEAD', '#D4A5A5', '#FF9A8B'];
+        let firstSelection = null;
+        let matching = false;
+
+        function createBubbles() {
+            const gameArea = document.getElementById('gameArea');
+            const items = [];
+            
+            // 创建配对元素（修改颜色分配逻辑）
+            Object.entries(pairs).forEach(([thinker, idea]) => {
+                // 为思想家和主张独立随机分配颜色
+                const thinkerColor = colors[Math.floor(Math.random() * colors.length)];
+                const ideaColor = colors[Math.floor(Math.random() * colors.length)];
+                
+                items.push({
+                    text: thinker,
+                    match: idea,
+                    type: 'thinker',
+                    color: thinkerColor
+                });
+                
+                items.push({
+                    text: idea,
+                    match: thinker,
+                    type: 'idea',
+                    color: ideaColor
+                });
+            });
+
+            // 打乱顺序
+            items.sort(() => Math.random() - 0.5);
+
+            // 创建泡泡元素
+            items.forEach(item => {
+                const bubble = document.createElement('div');
+                bubble.className = 'bubble';
+                bubble.style.backgroundColor = item.color;
+                bubble.textContent = item.text;
+                bubble.dataset.match = item.match;
+                bubble.dataset.type = item.type;
+                bubble.addEventListener('click', handleClick);
+                gameArea.appendChild(bubble);
+            });
+        }
+
+        // 剩余函数保持不变
+        function handleClick() {
+            if (matching || this.classList.contains('selected')) return;
+
+            this.classList.add('selected');
+            
+            if (!firstSelection) {
+                firstSelection = this;
+            } else {
+                matching = true;
+                const isMatched = checkMatch(firstSelection, this);
+                
+                if (isMatched) {
+                    setTimeout(() => {
+                        firstSelection.style.opacity = '0';
+                        this.style.opacity = '0';
+                        resetSelection();
+                        checkWin();
+                    }, 500);
+                } else {
+                    setTimeout(resetSelection, 500);
+                }
+            }
+        }
+
+        function checkMatch(bubble1, bubble2) {
+            return (bubble1.dataset.type !== bubble2.dataset.type) && 
+                   (bubble1.textContent === bubble2.dataset.match) && 
+                   (bubble2.textContent === bubble1.dataset.match);
+        }
+
+        function resetSelection() {
+            document.querySelectorAll('.bubble').forEach(bubble => {
+                bubble.classList.remove('selected');
+            });
+            firstSelection = null;
+            matching = false;
+        }
+
+        function checkWin() {
+            const remaining = document.querySelectorAll('.bubble:not([style*="opacity: 0"])');
+            if (remaining.length === 0) {
+                document.getElementById('successMessage').style.display = 'block';
+            }
+        }
+
+        // 初始化游戏
+        createBubbles();
+    </script>
+</body>
+</html>
